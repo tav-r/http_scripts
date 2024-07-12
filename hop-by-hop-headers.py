@@ -10,14 +10,19 @@ def main(url: str, cookies: dict[str, str]={}, headers: dict[str, str]={}):
     print(rec_enum_headers(url, HEADERS, ref_len, headers, cookies))
 
 def rec_enum_headers(url: str, hop_by_hop_headers: list[str], ref_len: int, headers: dict[str, str], cookies: dict[str, str]) -> list[str]:
-    response = requests.get(url, headers=headers | {"connection": "close, " + ", ".join(hop_by_hop_headers)}, cookies=cookies)
+    failure = False
+
+    try:
+        response = requests.get(url, headers=headers | {"connection": "close, " + ", ".join(hop_by_hop_headers)}, cookies=cookies)
+    except:
+        failure = True
 
     if len(hop_by_hop_headers) == 1:
         return hop_by_hop_headers
 
     hdrs: list[str] = []
 
-    if response.status_code != 200 or len(response.content) != ref_len:
+    if failure or response.status_code != 200 or len(response.content) != ref_len:
         hop_by_hop_headers1 = hop_by_hop_headers[:len(hop_by_hop_headers) // 2]
         hdrs += rec_enum_headers(url, hop_by_hop_headers1, ref_len, headers, cookies)
 
